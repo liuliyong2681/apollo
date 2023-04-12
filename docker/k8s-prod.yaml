@@ -1,0 +1,183 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apolloconfigservice
+  labels:
+    app: apolloconfigservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apolloconfigservice
+  template:
+    metadata:
+      labels:
+        app: apolloconfigservice
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTS
+          value: -Xmx1600m -Xms1600m
+        - name: spring_datasource_url
+          value: jdbc:mysql://172.20.1.8:3306/applo_config2?characterEncoding=utf8
+        - name: spring_datasource_username
+          value: op_apollo_config
+        - name: spring_datasource_password
+          value: Ebaolife2018
+        name: apollo-configservice
+        image: registry.ebaolife.net/apolloconfigservice:CI_COMMIT_TAG
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            memory: "2Gi"
+          requests:
+            memory:  "100Mi"
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apolloadminservice
+  labels:
+    app: apolloadminservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apolloadminservice
+  template:
+    metadata:
+      labels:
+        app: apolloadminservice
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTS
+          value: -Xmx1600m -Xms1600m
+        - name: spring_datasource_url
+          value: jdbc:mysql://172.20.1.8:3306/applo_config2?characterEncoding=utf8
+        - name: spring_datasource_username
+          value: op_apollo_config
+        - name: spring_datasource_password
+          value: Ebaolife2018
+        name: apollo-adminservice
+        image: registry.ebaolife.net/apolloadminservice:CI_COMMIT_TAG
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            memory: "2Gi"
+          requests:
+            memory:  "100Mi"
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apolloportal
+  labels:
+    app: apolloportal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apolloportal
+  template:
+    metadata:
+      labels:
+        app: apolloportal
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTS
+          value: -Xmx1600m -Xms1600m
+        - name: spring_datasource_url
+          value: jdbc:mysql://172.20.1.8:3306/applo_portal2?characterEncoding=utf8
+        - name: spring_datasource_username
+          value: op_apollo_config
+        - name: spring_datasource_password
+          value: Ebaolife2018
+        name: apollo-portal
+        image: registry.ebaolife.net/apolloportal:CI_COMMIT_TAG
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            memory: "2Gi"
+          requests:
+            memory:  "100Mi"
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apolloconfigservice
+  labels:
+    name: apolloconfigservice
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: apolloconfigservice
+  sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apolloportal
+  labels:
+    name: apolloportal
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: apolloportal
+  sessionAffinity: None
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: apolloconfigservice
+  annotations:
+    kubernetes.io/ingress.class: jianbaolife-i
+spec:
+  spec:
+  tls:
+  - hosts:
+    - apollo-configservice.jianbaolife.com
+    secretName: jianbaolife.com
+  rules:
+  - host: apollo-configservice.jianbaolife.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: apolloconfigservice
+          servicePort: 8080
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: apolloportal
+  annotations:
+    kubernetes.io/ingress.class: jianbaolife-i
+spec:
+  spec:
+  tls:
+  - hosts:
+    - apl-portal.jianbaolife.com
+    secretName: jianbaolife.com
+  rules:
+  - host: apl-portal.jianbaolife.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: apolloportal
+          servicePort: 8080
